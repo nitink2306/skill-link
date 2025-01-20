@@ -1,5 +1,5 @@
 // import { SIGN_IN_FORM, SIGN_UP_FORM } from "./forms"
-import { LANDING_PAGE_MENU } from "./menus"
+import { LANDING_PAGE_MENU, MenuProps } from "./menus"
 // import { CREATE_GROUP_PLACEHOLDER } from "./placeholder"
 // import { GROUP_LIST } from "./slider"
 
