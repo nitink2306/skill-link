@@ -18,12 +18,14 @@ export const PricingSection = (props: Props) => {
                     className="text-4xl font-semibold text-center"
                     element="H2"
                 >
-                    Pricing Plans That Fit Your Right
+                    Pricing Plans That Suit your needs
                 </GradientText>
                 <p className="text-sm md:text-center text-left text-muted-foreground">
-                    Grouple is a vibrant online community platform that empowers
-                    people to connect, <br className="hidden md:block" />
-                    collaborate, and cultivate meaningful relationships
+                    Skill-Link is an engaging online platform that fosters
+                    connections, people to connect,{" "}
+                    <br className="hidden md:block" />
+                    collaboration, and the development of impactful
+                    relationships.
                 </p>
             </BackdropGradient>
             <Card className="p-7 mt-10 md:w-auto w-full bg-themeBlack border-themeGray">
