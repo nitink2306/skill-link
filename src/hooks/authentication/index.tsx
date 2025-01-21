@@ -1,5 +1,4 @@
 import { onSignUpUser } from "@/actions/auth"
-import { SignInSchema } from "@/components/forms/sign-in/schema"
 import { SignUpSchema } from "@/components/forms/sign-up/schema"
 import { useSignIn, useSignUp } from "@clerk/nextjs"
 import { OAuthStrategy } from "@clerk/types"
@@ -10,6 +9,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { SignInSchema } from "../../components/forms/sign-in/schema"
 
 export const useAuthSignIn = () => {
     const { isLoaded, setActive, signIn } = useSignIn()
@@ -92,41 +92,52 @@ export const useAuthSignUp = () => {
 
     const router = useRouter()
 
+    // Replace the old Clerk calls with these updated methods.
     const onGenerateCode = async (email: string, password: string) => {
-        if (!isLoaded)
+        if (!isLoaded) {
             return toast("Error", {
-                description: "Oops! something went wrong",
+                description: "Oops! Something went wrong.",
             })
+        }
+
         try {
             if (email && password) {
+                // 1. Create the signUp object with your provided email/password
                 await signUp.create({
                     emailAddress: getValues("email"),
                     password: getValues("password"),
                 })
 
+                // 2. Prepare the email code factor
                 await signUp.prepareEmailAddressVerification({
                     strategy: "email_code",
                 })
 
                 setVerifying(true)
             } else {
-                return toast("Error", {
+                toast("Error", {
                     description: "No fields must be empty",
                 })
             }
         } catch (error) {
-            console.error(JSON.stringify(error, null, 2))
+            console.error("Clerk sign up error:", error)
+            toast("Error", {
+                description: "Something went wrong while generating the code.",
+            })
         }
     }
 
     const onInitiateUserRegistration = handleSubmit(async (values) => {
-        if (!isLoaded)
+        if (!isLoaded) {
             return toast("Error", {
-                description: "Oops! something went wrong",
+                description: "Oops! Something went wrong.",
             })
+        }
 
         try {
             setCreating(true)
+
+            // 3. Attempt to verify the code
             const completeSignUp = await signUp.attemptEmailAddressVerification(
                 {
                     code,
@@ -134,45 +145,46 @@ export const useAuthSignUp = () => {
             )
 
             if (completeSignUp.status !== "complete") {
-                return toast("Error", {
+                toast("Error", {
                     description:
-                        "Oops! something went wrong, status in complete",
+                        "Oops! Something went wrong, status incomplete.",
                 })
+                return
             }
 
-            if (completeSignUp.status === "complete") {
-                if (!signUp.createdUserId) return
-                const user = await onSignUpUser({
-                    firstname: values.firstname,
-                    lastname: values.lastname,
-                    clerkId: signUp.createdUserId,
-                    image: "",
+            // If status is complete, proceed with your post-signup logic
+            if (!signUp.createdUserId) return
+
+            // Example: call your API to create a user record in your database
+            const user = await onSignUpUser({
+                firstname: values.firstname,
+                lastname: values.lastname,
+                clerkId: signUp.createdUserId,
+                image: "",
+            })
+
+            reset()
+
+            if (user.status === 200) {
+                toast("Success", {
+                    description: user.message,
                 })
-
-                reset()
-
-                if (user.status === 200) {
-                    toast("Success", {
-                        description: user.message,
-                    })
-                    await setActive({
-                        session: completeSignUp.createdSessionId,
-                    })
-                    router.push(`/group/create`)
-                }
-                if (user.status !== 200) {
-                    toast("Error", {
-                        description: user.message + "action failed",
-                    })
-                    router.refresh
-                }
-                setCreating(false)
-                setVerifying(false)
+                await setActive({ session: completeSignUp.createdSessionId })
+                router.push(`/group/create`)
             } else {
-                console.error(JSON.stringify(completeSignUp, null, 2))
+                toast("Error", {
+                    description: user.message + " - action failed",
+                })
+                router.refresh()
             }
+
+            setCreating(false)
+            setVerifying(false)
         } catch (error) {
-            console.error(JSON.stringify(error, null, 2))
+            console.error("Clerk verification error:", error)
+            toast("Error", {
+                description: "Something went wrong while verifying the code.",
+            })
         }
     })
 
