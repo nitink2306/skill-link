@@ -19,6 +19,7 @@ import {
   onGetExploreGroup,
   onGetGroupInfo,
   onSearchGroups,
+  onUpdateGroupGallery,
   onUpDateGroupSettings,
 } from "@/actions/groups"
 import { supabaseClient } from "@/lib/utils"
@@ -43,6 +44,7 @@ import {
 // import { zodResolver } from "@hookform/resolvers/zod"
 // import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 // import { usePathname, useRouter } from "next/navigation"
+import { validateURLString } from "@/lib/utils"
 import { JSONContent } from "novel"
 // import { useEffect, useLayoutEffect, useRef, useState } from "react"
 // import { useForm } from "react-hook-form"
@@ -52,6 +54,7 @@ import { JSONContent } from "novel"
 // import { z } from "zod"
 
 import { GroupSettingsSchema } from "@/components/forms/group-settings/schema"
+import { UpdateGallerySchema } from "@/components/forms/media-gallery/schema"
 import { upload } from "@/lib/uploadcare"
 import {
   onClearList,
@@ -61,7 +64,7 @@ import { AppDispatch } from "@/redux/store"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import { useEffect, useLayoutEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useDispatch } from "react-redux"
 import { toast } from "sonner"
@@ -367,251 +370,239 @@ export const useExploreSlider = (query: string, paginate: number) => {
   return { refetch, isFetching, data, onLoadSlider }
 }
 
-// export const useGroupInfo = () => {
-//     const { data } = useQuery({
-//         queryKey: ["about-group-info"],
-//     })
+export const useGroupInfo = () => {
+  const { data } = useQuery({
+    queryKey: ["about-group-info"],
+  })
 
-//     const router = useRouter()
+  const router = useRouter()
 
-//     if (!data) router.push("/explore")
+  if (!data) router.push("/explore")
 
-//     const { group, status } = data as { status: number; group: GroupStateProps }
+  const { group, status } = data as { status: number; group: GroupStateProps }
 
-//     if (status !== 200) router.push("/explore")
+  if (status !== 200) router.push("/explore")
 
-//     return {
-//         group,
-//     }
-// }
+  return {
+    group,
+  }
+}
 
-// export const useGroupAbout = (
-//     description: string | null,
-//     jsonDescription: string | null,
-//     htmlDescription: string | null,
-//     currentMedia: string,
-//     groupid: string,
-// ) => {
-//     const editor = useRef<HTMLFormElement | null>(null)
-//     const mediaType = validateURLString(currentMedia)
-//     const [activeMedia, setActiveMedia] = useState<
-//         | {
-//               url: string | undefined
-//               type: string
-//           }
-//         | undefined
-//     >(
-//         mediaType.type === "IMAGE"
-//             ? {
-//                   url: currentMedia,
-//                   type: mediaType.type,
-//               }
-//             : { ...mediaType },
-//     )
+export const useGroupAbout = (
+  description: string | null,
+  jsonDescription: string | null,
+  htmlDescription: string | null,
+  currentMedia: string,
+  groupid: string,
+) => {
+  const editor = useRef<HTMLFormElement | null>(null)
+  const mediaType = validateURLString(currentMedia)
+  const [activeMedia, setActiveMedia] = useState<
+    | {
+        url: string | undefined
+        type: string
+      }
+    | undefined
+  >(
+    mediaType.type === "IMAGE"
+      ? {
+          url: currentMedia,
+          type: mediaType.type,
+        }
+      : { ...mediaType },
+  )
 
-//     const jsonContent =
-//         jsonDescription !== null
-//             ? JSON.parse(jsonDescription as string)
-//             : undefined
+  const jsonContent =
+    jsonDescription !== null ? JSON.parse(jsonDescription as string) : undefined
 
-//     const [onJsonDescription, setJsonDescription] = useState<
-//         JSONContent | undefined
-//     >(jsonContent)
+  const [onJsonDescription, setJsonDescription] = useState<
+    JSONContent | undefined
+  >(jsonContent)
 
-//     const [onDescription, setOnDescription] = useState<string | undefined>(
-//         description || undefined,
-//     )
+  const [onDescription, setOnDescription] = useState<string | undefined>(
+    description || undefined,
+  )
 
-//     const [onHtmlDescription, setOnHtmlDescription] = useState<
-//         string | undefined
-//     >(htmlDescription || undefined)
+  const [onHtmlDescription, setOnHtmlDescription] = useState<
+    string | undefined
+  >(htmlDescription || undefined)
 
-//     const [onEditDescription, setOnEditDescription] = useState<boolean>(false)
+  const [onEditDescription, setOnEditDescription] = useState<boolean>(false)
 
-//     const {
-//         setValue,
-//         formState: { errors },
-//         handleSubmit,
-//     } = useForm<z.infer<typeof GroupSettingsSchema>>({
-//         resolver: zodResolver(GroupSettingsSchema),
-//     })
+  const {
+    setValue,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<z.infer<typeof GroupSettingsSchema>>({
+    resolver: zodResolver(GroupSettingsSchema),
+  })
 
-//     const onSetDescriptions = () => {
-//         const JsonContent = JSON.stringify(onJsonDescription)
-//         setValue("jsondescription", JsonContent)
-//         setValue("description", onDescription)
-//         setValue("htmldescription", onHtmlDescription)
-//     }
+  const onSetDescriptions = () => {
+    const JsonContent = JSON.stringify(onJsonDescription)
+    setValue("jsondescription", JsonContent)
+    setValue("description", onDescription)
+    setValue("htmldescription", onHtmlDescription)
+  }
 
-//     useEffect(() => {
-//         onSetDescriptions()
-//         return () => {
-//             onSetDescriptions()
-//         }
-//     }, [onJsonDescription, onDescription])
+  useEffect(() => {
+    onSetDescriptions()
+    return () => {
+      onSetDescriptions()
+    }
+  }, [onJsonDescription, onDescription])
 
-//     const onEditTextEditor = (event: Event) => {
-//         if (editor.current) {
-//             !editor.current.contains(event.target as Node | null)
-//                 ? setOnEditDescription(false)
-//                 : setOnEditDescription(true)
-//         }
-//     }
+  const onEditTextEditor = (event: Event) => {
+    if (editor.current) {
+      !editor.current.contains(event.target as Node | null)
+        ? setOnEditDescription(false)
+        : setOnEditDescription(true)
+    }
+  }
 
-//     useEffect(() => {
-//         document.addEventListener("click", onEditTextEditor, false)
-//         return () => {
-//             document.removeEventListener("click", onEditTextEditor, false)
-//         }
-//     }, [])
+  useEffect(() => {
+    document.addEventListener("click", onEditTextEditor, false)
+    return () => {
+      document.removeEventListener("click", onEditTextEditor, false)
+    }
+  }, [])
 
-//     const { mutate, isPending } = useMutation({
-//         mutationKey: ["about-description"],
-//         mutationFn: async (values: z.infer<typeof GroupSettingsSchema>) => {
-//             if (values.description) {
-//                 const updated = await onUpDateGroupSettings(
-//                     groupid,
-//                     "DESCRIPTION",
-//                     values.description,
-//                     `/about/${groupid}`,
-//                 )
-//                 if (updated.status !== 200) {
-//                     return toast("Error", {
-//                         description: "Oops! looks like your form is empty",
-//                     })
-//                 }
-//             }
-//             if (values.jsondescription) {
-//                 const updated = await onUpDateGroupSettings(
-//                     groupid,
-//                     "JSONDESCRIPTION",
-//                     values.jsondescription,
-//                     `/about/${groupid}`,
-//                 )
-//                 if (updated.status !== 200) {
-//                     return toast("Error", {
-//                         description: "Oops! looks like your form is empty",
-//                     })
-//                 }
-//             }
-//             if (values.htmldescription) {
-//                 const updated = await onUpDateGroupSettings(
-//                     groupid,
-//                     "HTMLDESCRIPTION",
-//                     values.htmldescription,
-//                     `/about/${groupid}`,
-//                 )
-//                 if (updated.status !== 200) {
-//                     return toast("Error", {
-//                         description: "Oops! looks like your form is empty",
-//                     })
-//                 }
-//             }
-//             if (
-//                 !values.description &&
-//                 !values.jsondescription &&
-//                 !values.htmldescription
-//             ) {
-//                 return toast("Error", {
-//                     description: "Oops! looks like your form is empty",
-//                 })
-//             }
-//             return toast("Success", {
-//                 description: "Group description updated",
-//             })
-//         },
-//     })
-//     const onSetActiveMedia = (media: {
-//         url: string | undefined
-//         type: string
-//     }) => setActiveMedia(media)
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["about-description"],
+    mutationFn: async (values: z.infer<typeof GroupSettingsSchema>) => {
+      if (values.description) {
+        const updated = await onUpDateGroupSettings(
+          groupid,
+          "DESCRIPTION",
+          values.description,
+          `/about/${groupid}`,
+        )
+        if (updated.status !== 200) {
+          return toast("Error", {
+            description: "Oops! looks like your form is empty",
+          })
+        }
+      }
+      if (values.jsondescription) {
+        const updated = await onUpDateGroupSettings(
+          groupid,
+          "JSONDESCRIPTION",
+          values.jsondescription,
+          `/about/${groupid}`,
+        )
+        if (updated.status !== 200) {
+          return toast("Error", {
+            description: "Oops! looks like your form is empty",
+          })
+        }
+      }
+      if (values.htmldescription) {
+        const updated = await onUpDateGroupSettings(
+          groupid,
+          "HTMLDESCRIPTION",
+          values.htmldescription,
+          `/about/${groupid}`,
+        )
+        if (updated.status !== 200) {
+          return toast("Error", {
+            description: "Oops! looks like your form is empty",
+          })
+        }
+      }
+      if (
+        !values.description &&
+        !values.jsondescription &&
+        !values.htmldescription
+      ) {
+        return toast("Error", {
+          description: "Oops! looks like your form is empty",
+        })
+      }
+      return toast("Success", {
+        description: "Group description updated",
+      })
+    },
+  })
+  const onSetActiveMedia = (media: { url: string | undefined; type: string }) =>
+    setActiveMedia(media)
 
-//     const onUpdateDescription = handleSubmit(async (values) => {
-//         mutate(values)
-//     })
+  const onUpdateDescription = handleSubmit(async (values) => {
+    mutate(values)
+  })
 
-//     return {
-//         setOnDescription,
-//         onDescription,
-//         setJsonDescription,
-//         onJsonDescription,
-//         errors,
-//         onEditDescription,
-//         editor,
-//         activeMedia,
-//         onSetActiveMedia,
-//         setOnHtmlDescription,
-//         onUpdateDescription,
-//         isPending,
-//     }
-// }
+  return {
+    setOnDescription,
+    onDescription,
+    setJsonDescription,
+    onJsonDescription,
+    errors,
+    onEditDescription,
+    editor,
+    activeMedia,
+    onSetActiveMedia,
+    setOnHtmlDescription,
+    onUpdateDescription,
+    isPending,
+  }
+}
 
-// export const useMediaGallery = (groupid: string) => {
-//     const {
-//         register,
-//         formState: { errors },
-//         handleSubmit,
-//     } = useForm<z.infer<typeof UpdateGallerySchema>>({
-//         resolver: zodResolver(UpdateGallerySchema),
-//     })
+export const useMediaGallery = (groupid: string) => {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<z.infer<typeof UpdateGallerySchema>>({
+    resolver: zodResolver(UpdateGallerySchema),
+  })
 
-//     const { mutate, isPending } = useMutation({
-//         mutationKey: ["update-gallery"],
-//         mutationFn: async (values: z.infer<typeof UpdateGallerySchema>) => {
-//             if (values.videourl) {
-//                 const update = await onUpdateGroupGallery(
-//                     groupid,
-//                     values.videourl,
-//                 )
-//                 if (update && update.status !== 200) {
-//                     return toast("Error", {
-//                         description: update?.message,
-//                     })
-//                 }
-//             }
-//             if (values.image && values.image.length) {
-//                 let count = 0
-//                 while (count < values.image.length) {
-//                     const uploaded = await upload.uploadFile(
-//                         values.image[count],
-//                     )
-//                     if (uploaded) {
-//                         const update = await onUpdateGroupGallery(
-//                             groupid,
-//                             uploaded.uuid,
-//                         )
-//                         if (update?.status !== 200) {
-//                             toast("Error", {
-//                                 description: update?.message,
-//                             })
-//                             break
-//                         }
-//                     } else {
-//                         toast("Error", {
-//                             description: "Looks like something went wrong!",
-//                         })
-//                         break
-//                     }
-//                     console.log("increment")
-//                     count++
-//                 }
-//             }
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["update-gallery"],
+    mutationFn: async (values: z.infer<typeof UpdateGallerySchema>) => {
+      if (values.videourl) {
+        const update = await onUpdateGroupGallery(groupid, values.videourl)
+        if (update && update.status !== 200) {
+          return toast("Error", {
+            description: update?.message,
+          })
+        }
+      }
+      if (values.image && values.image.length) {
+        let count = 0
+        while (count < values.image.length) {
+          const uploaded = await upload.uploadFile(values.image[count])
+          if (uploaded) {
+            const update = await onUpdateGroupGallery(groupid, uploaded.uuid)
+            if (update?.status !== 200) {
+              toast("Error", {
+                description: update?.message,
+              })
+              break
+            }
+          } else {
+            toast("Error", {
+              description: "Looks like something went wrong!",
+            })
+            break
+          }
+          console.log("increment")
+          count++
+        }
+      }
 
-//             return toast("Success", {
-//                 description: "Group gallery updated",
-//             })
-//         },
-//     })
+      return toast("Success", {
+        description: "Group gallery updated",
+      })
+    },
+  })
 
-//     const onUpdateGallery = handleSubmit(async (values) => mutate(values))
+  const onUpdateGallery = handleSubmit(async (values) => mutate(values))
 
-//     return {
-//         register,
-//         errors,
-//         onUpdateGallery,
-//         isPending,
-//     }
-// }
+  return {
+    register,
+    errors,
+    onUpdateGallery,
+    isPending,
+  }
+}
 
 // export const useGroupChat = (groupid: string) => {
 //     const { data } = useQuery({
