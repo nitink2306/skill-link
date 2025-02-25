@@ -9,11 +9,16 @@ import {
 } from "@tanstack/react-query"
 import AboutGroup from "../_components/about"
 
-interface PageProps {
+type PageProps = {
   params: { groupid: string }
 }
 
+// Ensure this function is **NOT** returning a Promise for `params`
 const Page = async ({ params }: PageProps) => {
+  if (!params?.groupid) {
+    throw new Error("Missing groupid parameter")
+  }
+
   const query = new QueryClient()
 
   await query.prefetchQuery({
