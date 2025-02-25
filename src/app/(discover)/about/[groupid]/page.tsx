@@ -10,12 +10,14 @@ import {
 import AboutGroup from "../_components/about"
 
 type Props = {
-  params: {
-    groupid: string
-  }
+  params: { groupid: string }
 }
 
 const Page = async ({ params }: Props) => {
+  if (!params?.groupid) {
+    throw new Error("Missing groupid parameter")
+  }
+
   const query = new QueryClient()
 
   await query.prefetchQuery({
