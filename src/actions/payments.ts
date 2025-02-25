@@ -5,7 +5,7 @@ import { onAuthenticatedUser } from "./auth"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   typescript: true,
-  apiVersion: "2024-06-20",
+  apiVersion: "2024-12-18.acacia",
 })
 
 export const onGetStripeClientSecret = async () => {
