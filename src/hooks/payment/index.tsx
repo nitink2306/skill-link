@@ -45,6 +45,7 @@ import { useRouter } from "next/navigation"
 // import { useForm } from "react-hook-form"
 // import { toast } from "sonner"
 import { CreateGroupSubscriptionSchema } from "@/components/forms/subscription/schema"
+import axios from "axios"
 import { z } from "zod"
 
 export const useStripeElements = () => {
@@ -291,23 +292,23 @@ export const useAllSubscriptions = (groupid: string) => {
   return { data, mutate }
 }
 
-// export const useStripeConnect = (groupid: string) => {
-//   const [onStripeAccountPending, setOnStripeAccountPending] =
-//     useState<boolean>(false)
+export const useStripeConnect = (groupid: string) => {
+  const [onStripeAccountPending, setOnStripeAccountPending] =
+    useState<boolean>(false)
 
-//   const onStripeConnect = async () => {
-//     try {
-//       setOnStripeAccountPending(true)
-//       const account = await axios.get(`/api/stripe/connect?groupid=${groupid}`)
-//       if (account) {
-//         setOnStripeAccountPending(false)
-//         if (account) {
-//           window.location.href = account.data.url
-//         }
-//       }
-//     } catch (error) {
-//       console.log(error)
-//     }
-//   }
-//   return { onStripeConnect, onStripeAccountPending }
-// }
+  const onStripeConnect = async () => {
+    try {
+      setOnStripeAccountPending(true)
+      const account = await axios.get(`/api/stripe/connect?groupid=${groupid}`)
+      if (account) {
+        setOnStripeAccountPending(false)
+        if (account) {
+          window.location.href = account.data.url
+        }
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  return { onStripeConnect, onStripeAccountPending }
+}

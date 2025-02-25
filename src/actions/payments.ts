@@ -1,6 +1,7 @@
 "use server"
 import { client } from "@/lib/prisma"
 import Stripe from "stripe"
+import { onAuthenticatedUser } from "./auth"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
   typescript: true,
@@ -200,22 +201,22 @@ export const onActivateSubscription = async (id: string) => {
   }
 }
 
-// export const onGetStripeIntegration = async () => {
-//     try {
-//         const user = await onAuthenticatedUser()
-//         const stripeId = await client.user.findUnique({
-//             where: {
-//                 id: user.id,
-//             },
-//             select: {
-//                 stripeId: true,
-//             },
-//         })
+export const onGetStripeIntegration = async () => {
+  try {
+    const user = await onAuthenticatedUser()
+    const stripeId = await client.user.findUnique({
+      where: {
+        id: user.id,
+      },
+      select: {
+        stripeId: true,
+      },
+    })
 
-//         if (stripeId) {
-//             return stripeId.stripeId
-//         }
-//     } catch (error) {
-//         console.log(error)
-//     }
-// }
+    if (stripeId) {
+      return stripeId.stripeId
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}

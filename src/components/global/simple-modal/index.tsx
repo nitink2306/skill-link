@@ -6,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import Image from "next/image"
 
@@ -31,6 +32,7 @@ export const SimpleModal = ({
       return (
         <Dialog>
           <DialogTrigger asChild>{trigger}</DialogTrigger>
+
           <DialogContent className="bg-themeBlack border-themeDarkGray">
             <div className="flex justify-center gap-3 ">
               <div className="w-12 h-12 relative">
@@ -53,7 +55,9 @@ export const SimpleModal = ({
               </div>
             </div>
             <DialogHeader className="flex items-center">
-              <DialogTitle className="text-xl">{title}</DialogTitle>
+              <VisuallyHidden>
+                <DialogTitle className="text-xl">{title}</DialogTitle>
+              </VisuallyHidden>
               <DialogDescription className=" text-center">
                 {description}
               </DialogDescription>
